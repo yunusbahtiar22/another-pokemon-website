@@ -1,63 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
+import { PokemonIndex, PokemonDetail } from "@/types/pokemon";
+import { type URLString } from "@/types/pokemon";
 
-export type PaginationURL = string | null;
-export type URL = string;
-export type NameURL = { name: string; url: URL };
-type Ability = {
-  ability: NameURL;
-  is_hidden: boolean;
-  slot: number;
-};
-type PokemonForm = NameURL;
-type GameIndex = { game_index: number; version: NameURL };
-type Move = {
-  move: NameURL;
-  version_group_details: Array<{
-    level_learned_at: number;
-    move_learn_method: NameURL;
-    version_group: NameURL;
-  }>;
-};
-type Stat = {
-  base_stat: number;
-  effort: number;
-  stat: NameURL;
-};
-type PokemonType = {
-  slot: number;
-  type: NameURL;
-};
-
-interface PokemonIndex {
-  next: PaginationURL;
-  previous: PaginationURL;
-  count: number;
-  results: Array<NameURL>;
-}
-
-interface PokemonDetail {
-  abilities: Array<Ability>;
-  base_experience: number;
-  forms: Array<PokemonForm>;
-  game_indices: Array<GameIndex>;
-  height: number;
-  held_items: any[];
+type Pokemon = {
   id: number;
-  is_default: boolean;
-  location_area_encounters: URL;
-  name: string;
-  order: number;
-  past_types: any[];
-  species: NameURL;
-  weight: number;
-  moves: Array<Move>;
-  sprites: any;
-  stats: Array<Stat>;
-  types: Array<PokemonType>;
-}
+  name: Record<string, string>;
+  type: string[];
+  base: Record<string, number>;
+  image: string;
+};
+
+const indexUrl =
+  process.env.NEXT_PUBLIC_ENV === "development"
+    ? "http://localhost:3000/api/pokemon"
+    : "https://another-pokemon-website.vercel.app/api/pokemon";
 
 async function fetchPokemonIndex(): Promise<PokemonIndex> {
   const data = await fetch("https://pokeapi.co/api/v2/pokemon/");
+  return await data.json();
+}
+
+async function getPokemon(): Promise<Pokemon[]> {
+  const data = await fetch(indexUrl);
   return await data.json();
 }
 
@@ -68,7 +32,7 @@ export function usePokemonIndex() {
   });
 }
 
-export function usePokemonDetail(name: string, url: URL) {
+export function usePokemonDetail(name: string, url: string) {
   return useQuery({
     queryKey: [name],
     queryFn: async (): Promise<PokemonDetail> => {
@@ -76,4 +40,8 @@ export function usePokemonDetail(name: string, url: URL) {
       return await data.json();
     },
   });
+}
+
+export function usePokemonQuery() {
+  return useQuery({ queryKey: ["pokemons"], queryFn: getPokemon });
 }
